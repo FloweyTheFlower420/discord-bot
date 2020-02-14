@@ -3,6 +3,7 @@ import json
 
 def setup():
 	if not os.path.isfile("./config.json"):
+		print("config file not found, creating one from default...")
 		default = {
 			"coin-chance": 100
 		}
@@ -10,6 +11,7 @@ def setup():
 		fp.write(json.dumps(default))
 		fp.close()
 	if not os.path.isfile("./userinfo.json"):
+		print("userinfo file not found, creating empty file...")
 		fp = open("userinfo.json", "w")
 		fp.write("{}")
 		fp.close

@@ -26,7 +26,9 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-	if check_valid_coin(message):
+	if message.content.startswith("st!"):
+		print("someone invoked me!")
+	elif check_valid_coin(message):
 		snowflake = str(message.author.id)
 		usernick = message.author.nick
 
