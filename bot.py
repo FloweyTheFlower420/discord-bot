@@ -26,18 +26,26 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
+	snowflake = str(message.author.id)
+	usernick = message.author.nick
+	channel = message.channel
+	
 	if message.content.startswith("st!"):
+		
 		print("someone invoked me!")
+		cmd = message.content.split(' ')
+		cmd[0] = cmd[0][3:]
+		
+		if cmd[0] == "coins":
+			await channel.send("> `you have: " + str(read_user(snowflake, "coins")) + " coins!`")
+			
 	elif check_valid_coin(message):
-		snowflake = str(message.author.id)
-		usernick = message.author.nick
-
 		print("Someone got some coins! (" + usernick + ")") 	# prints a message
 
 		current_coins = read_user(snowflake, "coins") + 1	# use the 'snowflake' to store info
 		write_user(snowflake, "coins", current_coins)		# write to json
 
-		await message.channel.send("Someone got some coins! (" + usernick + ") coins: "	+ str(current_coins))
+		await channel.send("> `Someone got some coins! (" + usernick + ") coins: "	+ str(current_coins) + "`")
 
 keep_alive()
 token = os.environ.get("DISCORD_BOT_SECRET")
