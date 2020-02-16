@@ -62,7 +62,7 @@ async def on_message(message):
 		try:
 			await cmdlist[cmd[0]](message, snowflake, cmd, usernick)
 		except:
-			print("there was an error...")
+			await message.channel.send("> ```fix\n> unknown command; use 'st!help' for help\n> ```")
 	elif check_valid_coin(message):
 		print("Someone got some coins! (" + usernick + ")") 	# prints a message
 
