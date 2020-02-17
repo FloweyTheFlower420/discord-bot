@@ -25,7 +25,12 @@ def read_user(username, prop, default = 0):
 def write_user(username, prop, value):
 	fp = open("userinfo.json", "r+")
 	obj = json.loads(fp.read())
-	obj.update({username: {prop: value}})
+	try:
+		obj[username][prop] = value
+	except:
+		obj.update({username: {"coins": 0, "isroot": False}})
+		obj[username][prop] = value
+		
 	trunc(fp)
 	fp.write(json.dumps(obj, sort_keys=True, indent=8))
 	fp.close()
