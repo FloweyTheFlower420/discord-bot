@@ -1,123 +1,161 @@
-from keep_alive import keep_alive
-from getuser import read_user
-from getuser import write_user
-from init_conf import setup
+from getuser import read_user, write_user		# user info stuff
+from init_conf import setup						# setup config files
+from embed import *								# pretty embeds
 import discord
 import os
 import json
 import random
 
-RED = 0xcc2204
+setup()											# setup core files
 
-async def argerror(cmdname, channel):
-	embed = discord.Embed(color = RED)
-	embed.add_field(name = "Incorrect Command Useage", value = "incorrect useage; use ` st!help " + cmdname +" `", inline = False)
-	await channel.send(embed = embed)
-async def permerror(usernick, channel):
-	embed = discord.Embed(color = RED)
-	embed.add_field(name = "Permission Denied", value = "sorry, " + usernick + ", you do not have sufficient permissions to preform this action", inline = False)
-	await channel.send(embed = embed)
-	
+client = discord.Client()						# init discord client
 
-setup()						# setup core files
-
-client = discord.Client()			# init discord client
-
-fp = open("config.json", "r+")			# read configuration file
+fp = open("config.json", "r+")
 x = int(json.loads(fp.read())["coin-chance"])	# get coin chance
-fp.close()					# close the file
+fp.close()
 
-def check_valid_coin(msg):
-	return msg.author != client.user and msg.channel.name == "spam" and random.randint(1, x) == 1 and not msg.author.bot
+def search_for_user(guild, username):
+	memberlist = guild.members;
+	for member in memberlist:
+		if str(member) == username:
+			return member
+	return None;
 
-#async def help((message, snowflake, args, usernick):
-#	if len(args) == 1:
-#		await message.channel.send(		
+def check_valid_mochi(msg):						# coin 
+	return msg.author != client.user and random.randint(1, x) == 1 and not msg.author.bot
 
-async def coins(message, snowflake, args, usernick):
-	await message.channel.send("> `you have: " + str(read_user(snowflake, "coins")) + " coins!`")
+async def helper(message, snowflake, args, usernick):
+	if len(args) == 1:
+		if read_user(str(message.author.id), "isroot") == True:
+			await message.channel.send(embed = roothelpembed)
+		else:
+			await message.channel.send(embed = helpembed)	
+	elif len(args) == 2:
+		try:
+			await message.channel.send(embed = cmdhelp[args[1]])
+		except:
+			print("why oh why")
 
-async def setroot(message, snowflake, args, usernick):
+async def flour(message, snowflake, args, usernick):
+	embed = Discord.embed(title = "You have: " + str(read_user(snowflake, "mochi")) + "mochi flour!")
+	await message.channel.send(embed = embed)
+
+async def setlord(message, snowflake, args, usernick):
 	if not read_user(snowflake, "isroot"):
 		await permerror(usernick, message.channel)
 		return
 	
 	if len(args) != 2:
-		await argerror("setroot", message.channel)
+		await argerror("setlord", message.channel)
 		return
 		
 	memberlist = message.guild.members 
 
-	for member in memberlist:
-		if str(member) == args[1]:
-			await message.channel.send("> ```fix\n> successfully set user '" + member.nick + "' to root\n> ```")
-			write_user(str(member.id), "isroot", True)
-			return
+	member = search_for_user(message.guild, args[1])
+	if member is None:
+		usererror(args[1], message.channel)
+		return
 
-async def rmroot(message, snowflake, args, usernick):
+	write_user(str(member.id), "isroot", True)
+	embed = discord.Embed(color = GRN)
+	embed.add_field(name = "Success!", value = "Set user '" + member.nick + "' to mochi-lord")
+	await message.channel.send(embed = embed)
+	return
+
+async def rmlord(message, snowflake, args, usernick):
 	if not read_user(snowflake, "isroot"):
 		await permerror(usernick, message.channel)
 		return
 
 	if len(args) != 2:
-                await argerror("rmroot", message.channel)
-                return
+		await argerror("rmroot", message.channel)
+		return
 	
-	memberlist = message.guild.members
-
-	for member in memberlist:
-		if str(member) == args[1]:
-			write_user(str(member.id), "isroot", False)
-			await message.channel.send("> ```fix\n> successfully set user '" + member.nick + "' to root\n> ```")
+		member = search_for_user(message[1], asd)
+		if member is None:
+			usererror(message[1])
 			return
-async def chcoins(message, snowflake, args, usernick):
+
+		write_user(str(member.id), "isroot", False)
+		
+		embed = discord.Embed(color = GRN)
+		embed.add_field(name = "Success!", value = member.nick + " is no longer mochi-lord")
+		await message.channel.send(embed = embed)
+		return
+ 
+async def chflour(message, snowflake, args, usernick):
 	if not read_user(snowflake, "isroot"):
-                await permerror(usernick, message.channel)
-                return
+		await permerror(usernick, message.channel)
+		return
 	
 	if len(args) != 4:
-		await argerror("chcoins", message.channel)
+		await argerror("chmflour", message.channel)w
 		return
 
-	memberlist = message.guild.members
-	
-	for member in memberlist:
-		if str(member) == args[2]:
-			currsnow = str(member.id)
-			nick = member.nick
+	member = search_for_user(message.guild, args[1])
+	if member is None:
+		usererror(args[1], message.channel)
+		return
+
+	currsnow = str(member.id)
+	nick = member.nick
 			
 	
-	if args[1] == "set":
+	if args[2] == "set":
 		try:
 			count = int(args[3])
 		except:
-			await argerror("chcoins", message.channel)
+			await argerror("chmflour", message.channel)
 			return
-		
-		write_user(currsnow, "coins", count)
-		await message.channel.send("> ```fix\n> set coins of user '" + nick + "' to " + str(count) + "\n> ```")
-	else:
-		await argerror("chcoins", message.channel)
+		 
+		write_user(currsnow, "mochi", count)
+		embed = discord.Embed(color = GRN)
+		embed.add_field(name = "Success!", value = "Set user's mochi flour to " + str(count))
+		await message.channel.send(embed = embed)
+	elif args[2] == "add":
+		try:
+			count = int(args[3])
+		except:
+			await argerror("chmflour", message.channel)
+			return
+		newcoins = read_user(currsnow, "mochi") + count
+		write_user(currsnow, "mochi", newcoins)
 		return
+	else:
+		await argerror("chmflour", message.channel)
+		return
+
+async def donate(message, snowflake, args, usernick):
+	try:
+		amount = int(args[2])
+	except:
+		await argerror("donate", messge.channel)
+		return
+	current_coins = read_user(str(snowflake), "mochi")
+	if amount > current_coins:
+		return
+	new_coins_sender = read_user()	
+
 cmdlist = {
-	"coins": coins,
-	"setroot": setroot,
-	"chcoins": chcoins,
-	"rmroot": rmroot
+	"flour": flour,
+	"setroot": setlord,
+	"chmflour": chflour,
+	"rmroot": rmlord,
+	"help": helper,
+	"donate": donate
 }
 
-
-@client.event					# event handler
+@client.event							# event handler
 async def on_ready():
-	print("A flower joined the chat!")	# dump a msg
-	print(client.user)			# get username
+	print("give me all your mochi!")	# dump a msg
+	print(client.user)					# get username
 
 @client.event
 async def on_message(message):
 	snowflake = str(message.author.id)
 	usernick = message.author.nick
 	
-	if message.content.startswith("st!"):
+	if message.content.startswith("mt!"):
 		
 		print("someone invoked me!")
 		cmd = message.content.split(' ')
@@ -127,17 +165,18 @@ async def on_message(message):
 			await cmdlist[cmd[0]](message, snowflake, cmd, usernick)
 		except:
 			embed = discord.Embed(color = RED)
-			embed.add_field(name = "Unknown Command", value = "unknown command; use ` st!help ` for help", inline = False)
+			embed.add_field(name = "Unknown Command", value = "Unknown command; use ` mt!help ` for help", inline = False)
 			await message.channel.send(embed = embed)
 	
-	elif check_valid_coin(message):
-		print("Someone got some coins! (" + usernick + ")") 	# prints a message
+	elif check_valid_mochi(message):
+		print("Someone got some mochi flour! (" + usernick + ")") 	# prints a message
 
-		current_coins = read_user(snowflake, "coins") + 1	# use the 'snowflake' to store info
-		write_user(snowflake, "coins", current_coins)		# write to json
+		current_mochi = read_user(snowflake, "mochi") + 1	# use the 'snowflake' to store info
+		write_user(snowflake, "mochi", current_coins)		# write to json
+		
+		embed = Discord.embed(title = usernick + " got some mochi flour!");
+		embed.set_footer("mochi flour: " + str(current_mochi))
 
-		await channel.send("> `Someone got some coins! (" + usernick + ") coins: "	+ str(current_coins) + "`")
-
-keep_alive()
 token = os.environ.get("DISCORD_BOT_SECRET")
+print("running with token: " + token)
 coro = client.run(token)
